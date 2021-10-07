@@ -13,7 +13,7 @@ use uuid::Uuid;
 use futures_util::{future, pin_mut, stream::TryStreamExt, StreamExt};
 use thiserror::{Error as TError};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ConnectionHandle {
     pub uuid: Uuid,
 }
@@ -53,6 +53,12 @@ pub struct Server {
     server_handle: Option<JoinHandle<()>>,
     sessions_events: Arc<Mutex<HashMap<Uuid, Arc<Receiver<NetworkEvent>>>>>,
     sessions_handles: Arc<Mutex<HashMap<Uuid, JoinHandle<()>>>>,
+}
+
+impl Default for Server {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Server {
@@ -99,7 +105,7 @@ impl Server {
                 receivers.push(rx.clone());
             }
         }
-        if receivers.len() < 1 {
+        if receivers.is_empty() {
             return None;
         }
         for rx in receivers.iter() {
@@ -115,9 +121,7 @@ impl Server {
             {
                 let chs = self.sessions_events.lock().unwrap();
                 let res = chs.get(&ids[index.unwrap()]);
-                if res.is_none() {
-                    return None;
-                }
+                res?;
                 msg = Some(res.unwrap().recv());
             }
             let sess_id = ids[index.unwrap()];

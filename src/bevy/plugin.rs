@@ -80,7 +80,7 @@ where T: Send + Sync + 'static {
             let enveloppe = router.lock().unwrap().parse_enveloppe(&v);
             match enveloppe {
                 Ok(dat) => {
-                    match GenericParser::to_concrete_type::<T>(dat) {
+                    match GenericParser::try_into_concrete_type::<T>(dat) {
                         Ok(msg) => {
                             queue.send(msg);
                         },

@@ -21,6 +21,7 @@ where T: serde::de::DeserializeOwned + Send {
     })
 }
 
+#[derive(Default)]
 pub struct GenericParser {
     tps: HashMap<String, Box<dyn Any + Send>>,
 }
@@ -52,7 +53,7 @@ impl GenericParser {
         self.parse_as_any(&ev.message_type, &ev.payload)
     }
 
-    pub fn to_concrete_type<T: 'static>(d: Box<dyn Any + Send>) -> anyhow::Result<T> {
+    pub fn try_into_concrete_type<T: 'static>(d: Box<dyn Any + Send>) -> anyhow::Result<T> {
         match d.downcast::<T>() {
             Ok(r) => Ok(*r),
             Err(_) => anyhow::bail!("downcast type mismatch")
