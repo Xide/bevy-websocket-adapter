@@ -1,7 +1,7 @@
-extern crate bevy_websocket;
+extern crate bevy_websocket_adapter;
 use log::info;
 use ::bevy::prelude::*;
-use bevy_websocket::{
+use bevy_websocket_adapter::{
     server::{Server, NetworkEvent},
     bevy::{WebSocketServer}
 };

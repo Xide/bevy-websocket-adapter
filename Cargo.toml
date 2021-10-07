@@ -1,8 +1,17 @@
 [package]
-name = "bevy-websocket"
+name = "bevy_websocket_adapter"
 version = "0.1.0"
 authors = ["Germain GAU <germain.gau@gmail.com>"]
 edition = "2018"
+description = "Simple adapter to receive WebSocket messages in your bevy games as native Rust types."
+documentation = "https://docs.rs/bevy-websocket-adapter"
+readme = "README.md"
+homepage = "https://github.com/Xide/bevy-websocket-adapter"
+repository = "https://github.com/Xide/bevy-websocket-adapter"
+license = "MIT OR Apache-2.0"
+keywords = ["bevy", "websocket"]
+categories = ["network-programming", "game-development", "web-programming::websocket"]
+publish = true
 
 [features]
 default = ["bevy-plugin"]
