@@ -1,0 +1,26 @@
+[package]
+name = "bevy-websocket"
+version = "0.1.0"
+authors = ["Germain GAU <germain.gau@gmail.com>"]
+edition = "2018"
+
+[features]
+default = ["bevy-plugin"]
+bevy-plugin = ["bevy"]
+
+[dependencies]
+log = "0.4"
+tungstenite = { version = "0.14.0", default-features = false }
+tokio-tungstenite = "0.15.0"
+tokio = { version = "1.0.0", default-features = false, features = ["net", "io-util", "sync", "rt-multi-thread"] }
+crossbeam-channel = "0.5.0"
+uuid = { version = "0.8", features = ["serde", "v4"] }
+futures-util = { version = "0.3", default-features = false, features = ["async-await", "sink", "std"] }
+anyhow = "1.0.44"
+thiserror = "1.0"
+serde = { version = "1.0.130", features = ["derive"] }
+serde_json = { version = "1.0.68", features = ["raw_value"] }
+bevy = { version = "0.5.0", default-features = false, optional = true }
+
+[dev-dependencies]
+simple_logger = "1.13.0"
