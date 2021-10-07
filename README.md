@@ -16,7 +16,7 @@ You can check the [`examples`](./examples) directory for more details on the usa
 ### Table of content
 
 - [Message format](#message-format)
-- [TODO](#TODO)
+- [Roadmap](#roadmap)
 
 
 #### Message format
@@ -36,15 +36,15 @@ All websocket messages must be JSON object in this format:
 The contents of `d` can be any valid JSON value. Your native rust type must be able to serialize/deserialize the contents of `d` using the `serde_json` crate.
 
 
-#### TODO
+#### Roadmap
 
 
 
 - [x] Receive message from clients
 - [x] Deserialize messages to native Rust types
+- [x] Connect / Disconnect EventReader
 - [ ] Send messages to clients
 - [ ] Broadcast message
 - [ ] Client
 - [ ] Raw message EventReader in Bevy
-- [ ] Connect / Disconnect EventReader
 - [ ] Unmatched messages EventReader

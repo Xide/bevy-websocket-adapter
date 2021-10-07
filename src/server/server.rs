@@ -44,7 +44,7 @@ pub enum NetworkEvent {
     Connected(ConnectionHandle),
     Disconnected(ConnectionHandle),
     Message(ConnectionHandle, Vec<u8>),
-    Error(anyhow::Error)
+    Error(Option<ConnectionHandle>, anyhow::Error)
 }
 
 
@@ -88,7 +88,7 @@ impl Server {
         }
     }
 
-    pub fn recv(&mut self) -> Option<(ConnectionHandle, Vec<u8>)> {
+    pub fn recv(&mut self) -> Option<NetworkEvent> {
         let mut sel = crossbeam_channel::Select::new();
         let mut ids = Vec::<Uuid>::new();
         let mut receivers = Vec::new();
@@ -120,19 +120,23 @@ impl Server {
                 }
                 msg = Some(res.unwrap().recv());
             }
+            let sess_id = ids[index.unwrap()];
             r = match msg {
-                Some(Err(e)) => {
-                    warn!("failed to receive message: {:?}", e);
+                Some(Err(_e)) => {
+                    self.sessions_events.lock().unwrap().remove(&sess_id);
+                    self.sessions_handles.lock().unwrap().remove(&sess_id);
+                    debug!("connection closed for handle {}", sess_id);
                     None
                 },
                 Some(Ok(m)) => {
                     match m {
-                        NetworkEvent::Message(e, m) => {
-                            debug!("received message: {:?} {:?}", e, m);
-                            Some((e, m))
+                        NetworkEvent::Error(_, _) => {
+                            self.sessions_events.lock().unwrap().remove(&sess_id);
+                            self.sessions_handles.lock().unwrap().remove(&sess_id);
+                            Some(m)
                         },
                         _ => {
-                            None
+                            Some(m)
                         }
                     }
                 },
@@ -157,8 +161,6 @@ impl Server {
                 let client_handle = ConnectionHandle::new();
                 let handle_id = client_handle.id();
                 let (ev_tx, ev_rx) = unbounded();
-                let sessions_handles_chld = sessions_handles.clone();
-                let sessions_events_chld = sessions_events.clone();
 
                 let handle = async move {
                         let ws_stream = tokio_tungstenite::accept_async(socket)
@@ -172,7 +174,9 @@ impl Server {
                                 tokio_tungstenite::tungstenite::Message::Binary(bts) => {
                                     ev_tx.send(NetworkEvent::Message(client_handle.clone(), bts)).expect("failed to send network event");
                                 },
-                                tokio_tungstenite::tungstenite::Message::Close(_) => {},
+                                tokio_tungstenite::tungstenite::Message::Close(_) => {
+                                    ev_tx.send(NetworkEvent::Disconnected(client_handle.clone())).expect("failed to send network event");
+                                },
                                 _ => {
                                     warn!("unsupported format for message: {:?}", msg);
                                 }
@@ -180,15 +184,10 @@ impl Server {
 
                             future::ok(())
                         });
-
                         pin_mut!(handle_incoming);
                         if let Err(e) = handle_incoming.await {
-                            ev_tx.send(NetworkEvent::Error(e.into())).expect("failed to send network event");
-
+                            ev_tx.send(NetworkEvent::Error(None, e.into())).expect("failed to send network event");
                         }
-                        ev_tx.send(NetworkEvent::Disconnected(client_handle)).expect("failed to send network event");
-                        sessions_events_chld.lock().unwrap().remove(&handle_id);
-                        sessions_handles_chld.lock().unwrap().remove(&handle_id);
                 };
                 let session_handle = rt.spawn(handle);
                 sessions_handles.lock().unwrap().insert(handle_id, session_handle);

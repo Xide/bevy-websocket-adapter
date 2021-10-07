@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use log::{warn};
 use bevy::prelude::*;
-use crate::server::{Server, GenericParser, Enveloppe};
+use crate::server::{Server, GenericParser, Enveloppe, NetworkEvent};
 
 #[derive(Default, Debug)]
 pub struct WebSocketServer {}
@@ -12,36 +12,59 @@ impl Plugin for WebSocketServer {
         let server = Server::new();
         let router = Arc::new(Mutex::new(GenericParser::new()));
         let map = HashMap::<String, Vec<Enveloppe>>::new();
+        let network_events = Vec::<NetworkEvent>::new();
         app
             .insert_resource(server)
             .insert_resource(router)
             .insert_resource(map)
-            .add_system(consume_messages.system())
+            .insert_resource(network_events)
+            .add_event::<NetworkEvent>()
+            .add_stage_before(CoreStage::First, "network", SystemStage::single_threaded())
+            .add_system_to_stage("network", consume_messages.system())
+            .add_system_to_stage("network", handle_network_events.system())
         ;
     }
 }
 
 fn consume_messages(
     mut server: ResMut<Server>,
-    mut hmap: ResMut<HashMap::<String, Vec<Enveloppe>>>
+    mut hmap: ResMut<HashMap::<String, Vec<Enveloppe>>>,
+    mut network_events: ResMut<Vec<NetworkEvent>>
 ) {
     if !server.is_running() {
         return;
     }
 
-    while let Some((handle, raw_ev)) = server.recv() {
-        println!("consuming message from {:?}", handle);
-        if let Ok(enveloppe) = serde_json::from_reader::<std::io::Cursor<Vec<u8>>, Enveloppe>(std::io::Cursor::new(raw_ev)) {
-            let tp = enveloppe.message_type.to_string();
-            let mut v = if let Some(x) = hmap.remove(&tp) {
-                x
-            } else { Vec::new() };
-            v.push(enveloppe.clone());
-            hmap.insert(tp, v);
-        } else {
-            warn!("failed to deserialize message from {:?}", handle);
-            continue
+    while let Some(ev) = server.recv() {
+        match ev {
+            NetworkEvent::Message(handle, raw_ev) => {
+                trace!("consuming message from {:?}", handle);
+                if let Ok(enveloppe) = serde_json::from_reader::<std::io::Cursor<Vec<u8>>, Enveloppe>(std::io::Cursor::new(raw_ev)) {
+                    let tp = enveloppe.message_type.to_string();
+                    let mut v = if let Some(x) = hmap.remove(&tp) {
+                        x
+                    } else { Vec::new() };
+                    v.push(enveloppe.clone());
+                    hmap.insert(tp, v);
+                } else {
+                    warn!("failed to deserialize message from {:?}", handle);
+                    continue
+                }
+            },
+            other => {
+                error!("received network event: {:?}", other);
+                network_events.push(other);
+            }
         }
+    }
+}
+
+fn handle_network_events(
+    mut events: ResMut<Vec<NetworkEvent>>,
+    mut sink: EventWriter<NetworkEvent>
+) {
+    for ev in events.drain(..) {
+        sink.send(ev);
     }
 }
 
