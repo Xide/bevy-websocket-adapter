@@ -1,6 +1,18 @@
-# Bevy websocket
+# Bevy websocket adapter
 
 > Simple adapter to receive WebSocket messages in your [bevy](https://bevyengine.org/) games as native Rust types.
+
+
+<p align="center">
+    <a href="https://crates.io/crates/bevy_websocket_adapter">
+        <img src="https://img.shields.io/crates/v/bevy_websocket_adapter?logo=rust" alt="crates.io">
+    </a>
+    <a href="https://docs.rs/bevy_websocket_adapter">
+        <img src="https://docs.rs/bevy_websocket_adapter/badge.svg" alt="docs.rs">
+    </a>
+    <img src="https://img.shields.io/crates/l/bevy_websocket_adapter" alt="license" />
+</p>
+
 
 <hr>
 
