@@ -3,7 +3,7 @@ use log::info;
 use ::bevy::prelude::*;
 use bevy_websocket::{
     server::{Server, NetworkEvent},
-    bevy::{WebSocketServer, WsMessageInserter}
+    bevy::{WebSocketServer}
 };
 
 
