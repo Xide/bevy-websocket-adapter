@@ -1,7 +1,7 @@
 use crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError};
 use futures::{join, pending};
 use futures_util::{future as ufuture, stream::TryStreamExt, SinkExt, StreamExt};
-use log::{debug, info, trace, warn};
+use log::{debug, trace, warn};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -206,7 +206,6 @@ impl Server {
 
                         ufuture::ok(())
                     });
-                    let hndl_id = handle_id.clone();
                     let forward_handle = async move {
                         loop {
                             let req = from_handler_rx.try_recv();
@@ -217,14 +216,14 @@ impl Server {
                                 Err(e) => {
                                     warn!(
                                         "failed to forward message to client sink {:?} : {}",
-                                        hndl_id, e
+                                        handle_id, e
                                     );
                                 }
                                 Ok(ev) => {
                                     if let Err(e) = outgoing.send(ev).await {
                                         warn!(
                                             "failed to send message to client {:?} : {}",
-                                            hndl_id, e
+                                            handle_id, e
                                         );
                                     }
                                 }
@@ -264,7 +263,7 @@ impl Server {
         let client;
         {
             let map = self.sessions_sinks.lock().unwrap();
-            client = map.get(&handle.id()).map(|x| x.clone());
+            client = map.get(&handle.id()).cloned();
         }
         if let Some(channel) = client {
             if let Err(e) = channel.send(msg) {
