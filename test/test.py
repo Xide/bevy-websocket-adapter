@@ -3,7 +3,7 @@ import _thread
 import time
 
 def on_message(ws, message):
-    print(message)
+    print('Received message:', message)
 
 def on_error(ws, error):
     print(error)
@@ -15,7 +15,7 @@ def on_open(ws):
     def run(*args):
         for i in range(3):
             time.sleep(1)
-            ws.send(bytes("{ \"t\": \"dummy\", \"d\": {\"a\": 32 }}", 'utf-8'), websocket.ABNF.OPCODE_BINARY)
+            ws.send(bytes("{ \"t\": \"ping\", \"d\": {}}", 'utf-8'), websocket.ABNF.OPCODE_BINARY)
         time.sleep(1)
         ws.close()
         print("thread terminating...")

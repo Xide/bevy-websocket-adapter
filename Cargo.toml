@@ -30,6 +30,6 @@ thiserror = "1.0"
 serde = { version = "1.0.130", features = ["derive"] }
 serde_json = { version = "1.0.68", features = ["raw_value"] }
 bevy = { version = "0.5.0", default-features = false, optional = true }
-
+futures = "0.3.17"
 [dev-dependencies]
 simple_logger = "1.13.0"

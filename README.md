@@ -55,7 +55,7 @@ The contents of `d` can be any valid JSON value. Your native rust type must be a
 - [x] Receive message from clients
 - [x] Deserialize messages to native Rust types
 - [x] Connect / Disconnect EventReader
-- [ ] Send messages to clients
+- [x] Send messages to clients
 - [ ] Broadcast message
 - [ ] Client
 - [ ] Raw message EventReader in Bevy

@@ -1,21 +1,17 @@
 extern crate bevy_websocket_adapter;
-use log::info;
 use ::bevy::prelude::*;
 use bevy_websocket_adapter::{
-    server::{Server, NetworkEvent},
-    bevy::{WebSocketServer}
+    bevy::WebSocketServer,
+    server::{NetworkEvent, Server},
 };
+use log::info;
 
-
-fn start_listen(
-    mut ws: ResMut<Server>
-) {
-    ws.listen("0.0.0.0:12345").expect("failed to start websocket server");
+fn start_listen(mut ws: ResMut<Server>) {
+    ws.listen("0.0.0.0:12345")
+        .expect("failed to start websocket server");
 }
 
-fn listen_for_events(
-    mut evs: EventReader<NetworkEvent>
-) {
+fn listen_for_events(mut evs: EventReader<NetworkEvent>) {
     for ev in evs.iter() {
         info!("received NetworkEvent : {:?}", ev);
     }

@@ -9,18 +9,23 @@ use log::info;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-struct DummyEvent {
-    a: u32,
-}
+struct Ping {}
+#[derive(Serialize, Deserialize, Debug)]
+struct Pong {}
 
 fn start_listen(mut ws: ResMut<Server>) {
     ws.listen("0.0.0.0:12345")
         .expect("failed to start websocket server");
 }
 
-fn listen_for_dummy(mut evs: EventReader<(ConnectionHandle, DummyEvent)>) {
+fn respond_to_pings(mut evs: EventReader<(ConnectionHandle, Ping)>, srv: Res<Server>) {
     for (handle, ev) in evs.iter() {
-        info!("received DummyEvent from {:?} : {:?}", handle, ev);
+        info!("received ping from {:?} : {:?}", handle, ev);
+        let payload = serde_json::to_vec(&Pong {}).unwrap();
+        srv.send_message(
+            handle,
+            tokio_tungstenite::tungstenite::Message::Binary(payload),
+        )
     }
 }
 
@@ -30,7 +35,7 @@ fn main() {
         .add_plugins(MinimalPlugins)
         .add_plugin(WebSocketServer::default())
         .add_startup_system(start_listen.system())
-        .register_message_type::<DummyEvent>("dummy")
-        .add_system(listen_for_dummy.system())
+        .register_message_type::<Ping>("ping")
+        .add_system(respond_to_pings.system())
         .run();
 }
