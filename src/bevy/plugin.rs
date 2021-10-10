@@ -1,7 +1,7 @@
 use crate::server::MessageType;
 use crate::server::{ConnectionHandle, Enveloppe, GenericParser, NetworkEvent, Server};
 use bevy::prelude::*;
-use log::warn;
+use log::{trace, warn};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -55,7 +55,7 @@ fn consume_messages(
                 }
             }
             other => {
-                error!("received network event: {:?}", other);
+                trace!("received network event: {:?}", other);
                 network_events.push(other);
             }
         }
@@ -101,13 +101,22 @@ fn add_message_consumer<T>(
 }
 
 pub trait WsMessageInserter {
+    #[deprecated(
+        since = "0.1.4",
+        note = "Use [`add_message_type`](#method.add_message_type) instead."
+    )]
     fn register_message_type<T>(&mut self) -> &mut Self
+    where
+        T: MessageType + 'static {
+        self.add_message_type::<T>()
+    }
+    fn add_message_type<T>(&mut self) -> &mut Self
     where
         T: MessageType + 'static;
 }
 
 impl WsMessageInserter for AppBuilder {
-    fn register_message_type<T>(&mut self) -> &mut Self
+    fn add_message_type<T>(&mut self) -> &mut Self
     where
         T: MessageType + 'static,
     {
