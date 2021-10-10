@@ -27,8 +27,10 @@ You can check the [`examples`](./examples) directory for more details on the usa
 
 ### Table of content
 
-- [Message format](#message-format)
-- [Roadmap](#roadmap)
+- [Bevy websocket adapter](#bevy-websocket-adapter)
+    - [Table of content](#table-of-content)
+      - [Message format](#message-format)
+      - [Roadmap](#roadmap)
 
 
 #### Message format
@@ -56,7 +58,7 @@ The contents of `d` can be any valid JSON value. Your native rust type must be a
 - [x] Deserialize messages to native Rust types
 - [x] Connect / Disconnect EventReader
 - [x] Send messages to clients
-- [ ] Broadcast message
+- [x] Broadcast message
 - [ ] Client
 - [ ] Raw message EventReader in Bevy
 - [ ] Unmatched messages EventReader

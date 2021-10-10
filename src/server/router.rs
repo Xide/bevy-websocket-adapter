@@ -10,6 +10,18 @@ pub struct Enveloppe {
     pub payload: Box<serde_json::value::RawValue>,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SendEnveloppe<T> {
+    #[serde(rename(serialize = "t", deserialize = "t"))]
+    pub message_type: String,
+    #[serde(rename(serialize = "d", deserialize = "d"))]
+    pub payload: T,
+}
+
+pub trait MessageType: Any + serde::de::DeserializeOwned + Send + Sync {
+    fn message_type() -> &'static str;
+}
+
 type Df = Box<dyn Send + Fn(&serde_json::value::RawValue) -> anyhow::Result<Box<dyn Any + Send>>>;
 
 fn generate_deserialize_fn<T: Any>() -> Df
@@ -31,7 +43,8 @@ impl GenericParser {
         }
     }
 
-    pub fn insert_type<T: Any + serde::de::DeserializeOwned + Send>(&mut self, tag: &str) {
+    pub fn insert_type<T: MessageType>(&mut self) {
+        let tag = T::message_type();
         if self.tps.get(tag).is_some() {
             panic!("type '{}' already registered", tag);
         }

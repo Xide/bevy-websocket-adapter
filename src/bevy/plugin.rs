@@ -1,3 +1,4 @@
+use crate::server::MessageType;
 use crate::server::{ConnectionHandle, Enveloppe, GenericParser, NetworkEvent, Server};
 use bevy::prelude::*;
 use log::warn;
@@ -100,15 +101,15 @@ fn add_message_consumer<T>(
 }
 
 pub trait WsMessageInserter {
-    fn register_message_type<T>(&mut self, tag: &str) -> &mut Self
+    fn register_message_type<T>(&mut self) -> &mut Self
     where
-        T: Send + Sync + serde::de::DeserializeOwned + 'static;
+        T: MessageType + 'static;
 }
 
 impl WsMessageInserter for AppBuilder {
-    fn register_message_type<T>(&mut self, tag: &str) -> &mut Self
+    fn register_message_type<T>(&mut self) -> &mut Self
     where
-        T: Send + Sync + serde::de::DeserializeOwned + 'static,
+        T: MessageType + 'static,
     {
         self.add_event::<(ConnectionHandle, T)>();
         let router = self
@@ -116,10 +117,10 @@ impl WsMessageInserter for AppBuilder {
             .world
             .get_resource::<Arc<Mutex<GenericParser>>>()
             .expect("cannot register message before WebSocketServer initialization");
-        router.lock().unwrap().insert_type::<T>(tag);
+        router.lock().unwrap().insert_type::<T>();
 
         self.add_system(add_message_consumer::<T>.system().config(|params| {
-            params.0 = Some(tag.to_string());
+            params.0 = Some(T::message_type().to_string());
         }));
         self
     }

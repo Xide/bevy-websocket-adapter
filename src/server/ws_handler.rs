@@ -1,7 +1,9 @@
+use crate::server::{MessageType, SendEnveloppe};
 use crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError};
 use futures::{join, pending};
 use futures_util::{future as ufuture, stream::TryStreamExt, SinkExt, StreamExt};
 use log::{debug, trace, warn};
+use serde::Serialize;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -255,7 +257,21 @@ impl Server {
         Ok(())
     }
 
-    pub fn send_message(
+    pub fn send_message<T: MessageType + Serialize + Clone>(
+        &self,
+        handle: &ConnectionHandle,
+        msg: &T,
+    ) {
+        let sev = SendEnveloppe {
+            message_type: T::message_type().to_string(),
+            payload: msg.clone(),
+        };
+        let payload =
+            tokio_tungstenite::tungstenite::Message::Binary(serde_json::to_vec(&sev).unwrap());
+        self.send_raw_message(handle, payload)
+    }
+
+    pub fn send_raw_message(
         &self,
         handle: &ConnectionHandle,
         msg: tokio_tungstenite::tungstenite::Message,
@@ -277,6 +293,23 @@ impl Server {
                 "trying to send to a non existing client handle {:?}",
                 handle
             );
+        }
+    }
+
+    pub fn broadcast<T: MessageType + Serialize + Clone>(&self, msg: T) {
+        let sev = SendEnveloppe {
+            message_type: T::message_type().to_string(),
+            payload: msg.clone(),
+        };
+        let payload =
+            tokio_tungstenite::tungstenite::Message::Binary(serde_json::to_vec(&sev).unwrap());
+        let clients;
+        {
+            let map = self.sessions_sinks.lock().unwrap();
+            clients = map.keys().cloned().collect::<Vec<Uuid>>();
+        }
+        for c in clients {
+            self.send_raw_message(&ConnectionHandle { uuid: c }, payload.clone());
         }
     }
 }
