@@ -32,7 +32,7 @@ fn main() {
         .add_plugins(MinimalPlugins)
         .add_plugin(WebSocketServer::default())
         .add_startup_system(start_listen.system())
-        .register_message_type::<DummyEvent>()
+        .add_message_type::<DummyEvent>()
         .add_system(listen_for_dummy.system())
         .run();
 }

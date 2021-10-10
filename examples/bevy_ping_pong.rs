@@ -35,7 +35,7 @@ fn main() {
         .add_plugins(MinimalPlugins)
         .add_plugin(WebSocketServer::default())
         .add_startup_system(start_listen.system())
-        .register_message_type::<Ping>()
+        .add_message_type::<Ping>()
         .add_system(respond_to_pings.system())
         .run();
 }
