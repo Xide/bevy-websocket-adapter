@@ -1,6 +1,6 @@
 [package]
 name = "bevy_websocket_adapter"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Germain GAU <germain.gau@gmail.com>"]
 edition = "2018"
 description = "Simple adapter to receive WebSocket messages in your bevy games as native Rust types."
@@ -14,9 +14,10 @@ categories = ["network-programming", "game-development", "web-programming::webso
 publish = true
 
 [features]
-default = ["bevy-plugin", "server"]
+default = ["bevy-plugin", "server", "client"]
 bevy-plugin = ["bevy"]
 server = []
+client = []
 
 [dependencies]
 log = "0.4"
@@ -32,5 +33,6 @@ serde = { version = "1.0.130", features = ["derive"] }
 serde_json = { version = "1.0.68", features = ["raw_value"] }
 bevy = { version = "0.5.0", default-features = false, optional = true }
 futures = "0.3.17"
+url = "2.2.2"
 [dev-dependencies]
 simple_logger = "1.13.0"
