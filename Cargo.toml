@@ -14,8 +14,9 @@ categories = ["network-programming", "game-development", "web-programming::webso
 publish = true
 
 [features]
-default = ["bevy-plugin"]
+default = ["bevy-plugin", "server"]
 bevy-plugin = ["bevy"]
+server = []
 
 [dependencies]
 log = "0.4"

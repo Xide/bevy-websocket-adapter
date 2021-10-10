@@ -3,7 +3,8 @@ use ::bevy::prelude::*;
 use bevy_websocket_adapter::{
     bevy::{WebSocketServer, WsMessageInserter},
     impl_message_type,
-    server::{ConnectionHandle, Server},
+    shared::ConnectionHandle,
+    server::Server,
 };
 use log::info;
 

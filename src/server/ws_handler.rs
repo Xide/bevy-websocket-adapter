@@ -1,4 +1,4 @@
-use crate::server::{MessageType, SendEnveloppe};
+use crate::shared::{MessageType, SendEnveloppe};
 use crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError};
 use futures::{join, pending};
 use futures_util::{future as ufuture, stream::TryStreamExt, SinkExt, StreamExt};
@@ -8,44 +8,21 @@ use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
+use uuid::Uuid;
 use thiserror::Error as TError;
 use tokio::{
     net::{TcpListener, ToSocketAddrs},
     runtime::Runtime,
     task::JoinHandle,
 };
-use uuid::Uuid;
-
-#[derive(Debug, Clone, Default)]
-pub struct ConnectionHandle {
-    pub uuid: Uuid,
-}
-
-impl ConnectionHandle {
-    pub fn new() -> ConnectionHandle {
-        ConnectionHandle {
-            uuid: Uuid::new_v4(),
-        }
-    }
-
-    pub fn id(&self) -> Uuid {
-        self.uuid
-    }
-}
+use crate::shared::{
+    NetworkEvent,
+    ConnectionHandle
+};
 
 #[derive(TError, Debug)]
 pub enum ServerConfigError {}
 
-#[derive(TError, Debug)]
-pub enum NetworkError {}
-
-#[derive(Debug)]
-pub enum NetworkEvent {
-    Connected(ConnectionHandle),
-    Disconnected(ConnectionHandle),
-    Message(ConnectionHandle, Vec<u8>),
-    Error(Option<ConnectionHandle>, anyhow::Error),
-}
 
 pub struct Server {
     rt: Arc<Runtime>,
@@ -299,7 +276,7 @@ impl Server {
     pub fn broadcast<T: MessageType + Serialize + Clone>(&self, msg: T) {
         let sev = SendEnveloppe {
             message_type: T::message_type().to_string(),
-            payload: msg.clone(),
+            payload: msg,
         };
         let payload =
             tokio_tungstenite::tungstenite::Message::Binary(serde_json::to_vec(&sev).unwrap());
